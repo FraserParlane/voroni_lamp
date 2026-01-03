@@ -1,0 +1,20 @@
+# General
+.DS_Store
+*.ini
+*.xmp
+
+# PyCharm
+.idea/*
+venv
+
+# Python
+*.pyc
+
+# Environments
+.venv
+venv/
+
+# Video
+*/Adobe Premiere Pro Video Previews/*
+*.MXF
+*.mpeg
