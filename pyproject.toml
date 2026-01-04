@@ -9,4 +9,5 @@ dependencies = [
 	"matplotlib",
 	"pytest",
 	"scikit-learn",
+	"shapely>=2.1.2",
 ]
