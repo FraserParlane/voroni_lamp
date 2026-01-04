@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+src/voroni_lamp/__init__.py
+src/voroni_lamp/voroni_lamp.py
+src/voroni_lamp.egg-info/PKG-INFO
+src/voroni_lamp.egg-info/SOURCES.txt
+src/voroni_lamp.egg-info/dependency_links.txt
+src/voroni_lamp.egg-info/requires.txt
+src/voroni_lamp.egg-info/top_level.txt
+tests/test_voroni_lamp.py

@@ -2,6 +2,9 @@
 .DS_Store
 *.ini
 *.xmp
+PKG-INFO
+*.png
+uv.lock
 
 # PyCharm
 .idea/*
