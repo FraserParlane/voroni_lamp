@@ -32,6 +32,7 @@ class Voroni(ABC):
     
     Cell: A hole in the design
     Edge: The sides of the rectangle
+    Connectors: Lines between the centres of cells
     
     
     n_cells (int): The number of holes to generate.
@@ -137,7 +138,48 @@ class Voroni(ABC):
             polygons.append(poly)
 
         return polygons
+    
+    @cached_property
+    def connectors(self) -> NDArray:
+        
+        # Generate all the connectors with the edges of the polygons.
+        cons = []
+        for poly in self.flush_polygons:
+            centre = np.array(poly.centroid.xy)[:, 0]
+            xy = np.stack(poly.exterior.xy).T
+            for i in range(len(xy) - 1):
+                mid_xy = xy[i:i+2, :].mean(axis=0)
+                con = np.concatenate([centre, mid_xy])
+                cons.append(con)
+        cons = np.array(cons)
+        
+        # Identify edges of polygons that have two connectors. (Most do.)
+        # Simplify this to one path with no kink.
+        simple_cons = []
+        skip_idx = []
+        for i, con in enumerate(cons):
             
+            # If already merged with another connection, skip
+            if i in skip_idx:
+                continue
+            match_idx = np.where((cons[:, 2:] == con[2:]).all(axis=1))[0]
+            
+            # If only matches itself, then it's an edge piece and no
+            # simplication is needed.
+            if len(match_idx) == 1:
+                simple_cons.append(con)
+                continue
+            
+            # Merge with the match
+            match_idx = match_idx[match_idx != i][0]
+            skip_idx.append(match_idx)
+            simple_con = np.concat([con[:2], cons[match_idx][:2]])
+            simple_cons.append(simple_con)
+            
+        simple_cons = np.stack(simple_cons)
+        return simple_cons
+
+
     @cached_property
     def n_polygons(self) -> int:
         return len(self.polygons)
@@ -152,21 +194,22 @@ class Voroni(ABC):
             dpi=200,
         )
         
-        # Scatter centres
-        ax.scatter(
-            self.centres[:, 0],
-            self.centres[:, 1],
-            zorder=15,
-            color='black',
-            s=5,
-            alpha=0.25,
-        )
-        
         # Polygons
         mpl_polys = [
             MplPolygon(list(poly.exterior.coords))
             for poly in self.polygons
         ]
+        
+        # Connectors
+        for c in self.connectors:
+            ax.plot(
+                [c[0], c[2]],
+                [c[1], c[3]],
+                lw=3,
+                color='black',
+                alpha=0.25,
+                zorder=2,
+            )
         
         # Colors
         cmap = plt.get_cmap("viridis")
@@ -201,7 +244,7 @@ class Voroni(ABC):
 @dataclass
 class SampleVoroni(Voroni):
     
-    rel_norm_scale: float = 0.2
+    rel_norm_scale: float = 0.18
     
     @cached_property
     def random_samples(self) -> NDArray:
@@ -223,7 +266,6 @@ class SampleVoroni(Voroni):
     
 if __name__ == "__main__":
     
-    sv = SampleVoroni(
-        rel_norm_scale=0.18,
-    )
+    sv = SampleVoroni()
+    _ = sv.connectors
     sv.figure.savefig(Path(__file__).parent / 'demo.png')
